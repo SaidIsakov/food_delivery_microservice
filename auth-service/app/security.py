@@ -1,0 +1,33 @@
+from datetime import UTC, datetime, timedelta
+import json
+
+import jwt
+from pwdlib import PasswordHash
+
+from .config import settings
+from .models import User
+
+password_hash = PasswordHash.recommended()
+
+def hash_password(password: str):
+  return password_hash.hash(password)
+
+
+def verify_password(password: str, encoded_password: str):
+  return password_hash.verify(password, encoded_password)
+
+
+def create_access_token(user: User):
+  now = datetime.now(UTC)
+  payload ={
+      "user_id": user.id,
+      "email": user.email,
+      "exp": now + timedelta(seconds=3600)
+  }
+
+  token = jwt.encode(
+      payload=(payload),
+      key=settings.jwt_secret.get_secret_value(),
+      algorithm=settings.jwt_algoritm
+  )
+  return token
